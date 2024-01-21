@@ -1,26 +1,27 @@
 extends CharacterBody3D
 
-
-const SPEED = 5.0
+const SPEED = 7.0
 const JUMP_VELOCITY = 4.5
 
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 
+@onready var spring_arm = $CameraOrigin/SpringArm3D
+
 func _physics_process(delta):
 	if not is_on_floor():
 		velocity.y -= gravity * delta
-
-	if Input.is_action_just_pressed("jump") and is_on_floor():
-		velocity.y = JUMP_VELOCITY
-
-	var input_dir = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
-	var direction = (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
-	if direction:
-		velocity.x = direction.x * SPEED
-		velocity.z = direction.z * SPEED
-		$Pivot.look_at(position - direction, Vector3.UP)
-	else:
-		velocity.x = move_toward(velocity.x, 0, SPEED)
-		velocity.z = move_toward(velocity.z, 0, SPEED)
 	
+	var move_direction = Vector3.ZERO
+	move_direction.x = Input.get_action_strength("move_right") - Input.get_action_strength("move_left")
+	move_direction.z = Input.get_action_strength("move_back") - Input.get_action_strength("move_forward")
+	move_direction = move_direction.rotated(Vector3.UP, spring_arm.rotation.y).normalized()
+	
+	if move_direction:
+		$RobotArmature.look_at(transform.origin - Vector3(move_direction.x, 0, move_direction.z))
+	
+	velocity.x = move_direction.x * SPEED
+	velocity.z = move_direction.z * SPEED
+	
+	if Input.is_action_pressed("jump") and is_on_floor():
+		velocity.y = JUMP_VELOCITY
 	move_and_slide()
