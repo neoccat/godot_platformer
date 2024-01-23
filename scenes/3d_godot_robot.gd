@@ -33,7 +33,7 @@ func get_character_move_direction() -> Vector3:
 func set_IWR_interpolated_blend_position(move_direction, delta):
 	var target_blend_position = Vector2(move_direction.x, move_direction.z)
 	current_blend_position = current_blend_position.lerp(target_blend_position, BLEND_INTERPOLATION_SPEED * delta)
-	$AnimationTree.set("parameters/IWR/blend_position", current_blend_position)
+	$AnimationTree.set("parameters/idle_walk_run/blend_position", current_blend_position)
 
 func set_interpolated_velocity(move_direction, delta):
 	var target_velocity = move_direction * SPEED
@@ -43,6 +43,14 @@ func set_interpolated_velocity(move_direction, delta):
 func handle_jump_and_gravity(delta):
 	if not is_on_floor():
 		velocity.y -= gravity * delta
-		
+	else:
+		$AnimationTree.set("parameters/conditions/is_jumping", false)
+		$AnimationTree.set("parameters/conditions/is_grounded", true)
+
+	print(str($AnimationTree.get("parameters/idle_jump/blend_position")))
+
 	if Input.is_action_pressed("jump") and is_on_floor():
-		velocity.y = JUMP_VELOCITY
+		velocity.y += JUMP_VELOCITY
+		$AnimationTree.set("parameters/conditions/is_jumping", true)
+		$AnimationTree.set("parameters/conditions/is_grounded", false)
+	$AnimationTree.set("parameters/idle_jump/blend_position", velocity.y / JUMP_VELOCITY)
